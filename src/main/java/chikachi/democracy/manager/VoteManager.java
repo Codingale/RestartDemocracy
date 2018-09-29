@@ -23,10 +23,8 @@ import chikachi.democracy.RestartDemocracy;
 import chikachi.democracy.Vote;
 import chikachi.democracy.timer.CooldownTimerTask;
 import chikachi.democracy.timer.VoteTimerTask;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.event.FMLInterModComms;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +34,7 @@ public class VoteManager {
     private static VoteManager instance;
 
     public boolean postedCooldown = false;
-    private boolean ignoreCooldown = false;
+    private boolean ignoreCooldown = true;
 
     private int voteRequired = 0;
     private List<String> votes = new ArrayList<>();
@@ -59,7 +57,7 @@ public class VoteManager {
 
     public void onVote(Vote vote) {
         if (this.isCoolingDown()) {
-            Long cooldownEnd = Configuration.getCooldownEnd();
+            int cooldownEnd = Configuration.getCooldownEnd();
             if (cooldownEnd > 0) {
                 long now = System.currentTimeMillis();
                 if (cooldownEnd > now) {
@@ -115,7 +113,7 @@ public class VoteManager {
         } else {
             this.broadcastMessage(
                     String.format(
-                            "Vote on server restart have begun!\nVote running for %d seconds\nVote by using !%s",
+                            "Vote on server restart have begun!\nVote running for %d seconds\nVote by using !%s or !vr",
                             Configuration.getVoteTime(),
                             Configuration.getCommand()
                     )
@@ -129,14 +127,7 @@ public class VoteManager {
         }
 
         // Minecraft
-        RestartDemocracy.minecraftServer.addChatMessage(new TextComponentString(message));
-
-        // Discord
-        if (Loader.isModLoaded("DiscordIntegration")) {
-            NBTTagCompound sendDiscordMessageTagCompound = new NBTTagCompound();
-            sendDiscordMessageTagCompound.setString("message", message);
-            FMLInterModComms.sendRuntimeMessage(RestartDemocracy.instance, "DiscordIntegration", "sendMessage", sendDiscordMessageTagCompound);
-        }
+        RestartDemocracy.minecraftServer.sendMessage(new TextComponentString(message));
     }
 
     private String timeBeautifier(long milliseconds) {
@@ -174,7 +165,6 @@ public class VoteManager {
 
     private void onVoteSuccess() {
         this.broadcastMessage("Server is restarting!");
-        Configuration.writeTimestamp();
         RestartDemocracy.minecraftServer.getCommandManager().executeCommand(new DemocracyCommandSender(), "stop");
     }
 
@@ -189,7 +179,7 @@ public class VoteManager {
 
     private boolean isCoolingDown() {
         if (!this.ignoreCooldown) {
-            Long cooldownEnd = Configuration.getCooldownEnd();
+            int cooldownEnd = Configuration.getCooldownEnd();
             if (cooldownEnd > 0) {
                 long now = System.currentTimeMillis();
                 if (cooldownEnd > now) {

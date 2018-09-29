@@ -17,138 +17,35 @@
 
 package chikachi.democracy;
 
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
-import java.io.*;
+import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
 
+@Config(modid = Constants.MODID, name = Constants.MODNAME)
 public class Configuration {
-    private static File configFile;
-    private static File timestampFile;
 
-    private static long timestamp = 0;
-    private static long cooldownEnd = 0;
-    private static int voteTime = 30;
-    private static boolean enableDiscord = true;
-    private static int votesRequired = 50;
-    private static int cooldown = 20;
-    private static String command = "restart";
+    @Config.Comment("How long after a server restart should we wait before letting another one happen? (in seconds) [default: 10 minutes]")
+    @Config.Name("Cooldown")
+    public static int cooldownEnd = 60 * 10;
 
-    static void onPreInit(FMLPreInitializationEvent event) {
-        File directory = new File(event.getModConfigurationDirectory().getAbsolutePath() + File.separator + "Chikachi");
-        //noinspection ResultOfMethodCallIgnored
-        directory.mkdirs();
+    @Config.Comment("Restart command other than (!vr) [default:!restart]")
+    @Config.Name("Command")
+    public static String command = "!restart";
 
-        configFile = new File(directory, Constants.MODID + ".json");
-        timestampFile = new File(directory, Constants.MODID + "_timestamp");
 
-        load();
-    }
+    @Config.Name("VoteTime")
+    @Config.Comment("Total time to vote")
+    public static int voteTime = 30;
 
-    private static void load() {
-        if (timestampFile != null && timestampFile.exists()) {
-            try {
-                BufferedReader reader = new BufferedReader(new FileReader(timestampFile));
-                String line = reader.readLine();
-                timestamp = Long.parseLong(line);
-                cooldownEnd = timestamp + (cooldown * 60 * 1000);
-                reader.close();
-            } catch (IOException | NumberFormatException e) {
-                RestartDemocracy.Log("Error reading timestamp file", true);
-                e.printStackTrace();
-            }
-        }
-
-        if (configFile == null) {
-            return;
-        }
-
-        if (!configFile.exists()) {
-            try {
-                JsonWriter writer = new JsonWriter(new FileWriter(configFile));
-                writer.setIndent("  ");
-
-                writer.beginObject();
-
-                writer.name("command");
-                writer.value(command);
-
-                writer.name("voteTime");
-                writer.value(voteTime);
-
-                writer.name("enableDiscord");
-                writer.value(enableDiscord);
-
-                writer.name("votesRequired");
-                writer.value(votesRequired);
-
-                writer.name("cooldown");
-                writer.value(cooldown);
-
-                writer.endObject();
-
-                writer.close();
-            } catch (IOException e) {
-                RestartDemocracy.Log("Error generating default config file", true);
-                e.printStackTrace();
-            }
-        } else {
-            try {
-                JsonReader reader = new JsonReader(new FileReader(configFile));
-                String name;
-
-                reader.beginObject();
-                while (reader.hasNext()) {
-                    name = reader.nextName();
-                    if (name.equalsIgnoreCase("command") && reader.peek() == JsonToken.STRING) {
-                        command = reader.nextString();
-                    } else if (name.equalsIgnoreCase("voteTime") && reader.peek() == JsonToken.NUMBER) {
-                        voteTime = reader.nextInt();
-                    } else if (name.equalsIgnoreCase("enableDiscord") && reader.peek() == JsonToken.BOOLEAN) {
-                        enableDiscord = reader.nextBoolean();
-                    } else if (name.equalsIgnoreCase("votesRequired") && reader.peek() == JsonToken.NUMBER) {
-                        votesRequired = reader.nextInt();
-                    } else if (name.equalsIgnoreCase("cooldown") && reader.peek() == JsonToken.NUMBER) {
-                        cooldown = reader.nextInt();
-                        cooldownEnd = timestamp + (cooldown * 60 * 1000);
-                    } else {
-                        reader.skipValue();
-                    }
-                }
-                reader.endObject();
-            } catch (IOException e) {
-                RestartDemocracy.Log("Error reading config file", true);
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void writeTimestamp() {
-        if (timestampFile == null) {
-            return;
-        }
-
-        try {
-            FileWriter writer = new FileWriter(timestampFile);
-            writer.write(Long.toString(System.currentTimeMillis()));
-            writer.close();
-        } catch (IOException e) {
-            RestartDemocracy.Log("Error writing timestamp file", true);
-            e.printStackTrace();
-        }
-    }
-
-    public static boolean isDiscordEnabled() {
-        return enableDiscord;
-    }
+    @Config.Name("Percent to pass")
+    @Config.Comment("How much of the server needs to vote to restart?")
+    public static int votesRequired = 50;
 
     public static int getVoteTime() {
         return voteTime;
     }
 
-    public static long getCooldownEnd() {
+    public static int getCooldownEnd() {
         return cooldownEnd;
     }
 
@@ -156,7 +53,5 @@ public class Configuration {
         return votesRequired;
     }
 
-    public static String getCommand() {
-        return command;
-    }
+    public static String getCommand() { return command;}
 }

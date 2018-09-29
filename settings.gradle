@@ -1,4 +1,0 @@
-include ':ChikachiLib'
-project(':ChikachiLib').projectDir = new File(settingsDir, '../ChikachiLib')
-include ':DiscordIntegration'
-project(':DiscordIntegration').projectDir = new File(settingsDir, '../DiscordIntegration')

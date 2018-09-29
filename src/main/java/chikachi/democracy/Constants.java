@@ -18,7 +18,7 @@
 package chikachi.democracy;
 
 public class Constants {
-    static final String MODID = "RestartDemocracy";
+    static final String MODID = "restartdemocracy";
     static final String MODNAME = "Restart Democracy";
-    static final String VERSION = "0.1.0";
+    static final String VERSION = "1.0.0";
 }
